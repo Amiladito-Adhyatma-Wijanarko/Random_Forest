@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediksi Stok - Tova Gorden</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .input-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .input-section h3 {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .input-section h3 i {
+            color: #3b82f6;
+            font-size: 1.5rem;
+        }
+
+        .input-description {
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+        }
+
+        .stats-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stats-header i {
+            font-size: 2rem;
+            color: #3b82f6;
+        }
+
+        .stats-header h3 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-box.total {
+            border-color: #10b981;
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+        }
+
+        .stat-box.tinggi {
+            border-color: #3b82f6;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        }
+
+        .stat-box.rendah {
+            border-color: #ef4444;
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+        }
+
+        .stat-box.rata {
+            border-color: #8b5cf6;
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+        }
+
+        .stat-box .label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-box .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .stat-box.total .value {
+            color: #10b981;
+        }
+
+        .stat-box.tinggi .value {
+            color: #3b82f6;
+        }
+
+        .stat-box.rendah .value {
+            color: #ef4444;
+        }
+
+        .stat-box.rata .value {
+            color: #8b5cf6;
+        }
+
+        .results-section {
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+        }
+
+        .visualization-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .viz-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .viz-header i {
+            font-size: 1.5rem;
+            color: #3b82f6;
+        }
+
+        .viz-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .chart-wrapper {
+            min-height: 450px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto !important;
+        }
+
+        .results-table {
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .prediction-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+        }
+
+        .prediction-table thead {
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .prediction-table thead th {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .prediction-table thead th:first-child {
+            border-radius: 8px 0 0 0;
+            width: 80px;
+        }
+
+        .prediction-table thead th:nth-child(2) {
+            text-align: left;
+        }
+
+        .prediction-table thead th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+
+        .prediction-table tbody tr {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .prediction-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .prediction-table tbody td {
+            padding: 1rem;
+            color: #1f2937;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        .prediction-table tbody td:first-child {
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .prediction-table tbody td:nth-child(2) {
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .prediction-table tbody td:nth-child(3) {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .category-badge {
+            padding: 0.4rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .category-tinggi {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .category-rendah {
+            background: #ef4444;
+            color: white;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #e5e7eb;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .btn-predict {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <i class="fas fa-file-alt logo-icon"></i>
+            <h1 class="logo-text">Tova Gorden</h1>
+        </div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/upload" class="nav-item">
+                <i class="fas fa-upload"></i>
+                <span>Upload Data</span>
+            </a>
+            <a href="/prediksi" class="nav-item active">
+                <i class="fas fa-chart-line"></i>
+                <span>Prediksi Penjualan</span>
+            </a>
+            <a href="/evaluasi" class="nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Evaluasi Model</span>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-chart-line page-icon"></i>
+                <h2>Prediksi Stok</h2>
+            </div>
+            <p class="page-subtitle">Prediksi kebutuhan stok gorden menggunakan Random Forest Regressor</p>
+        </div>
+
+        <!-- Input Section -->
+        <div class="input-section">
+            <h3>
+                <i class="fas fa-edit"></i>
+                Input Minggu Target
+            </h3>
+            <p class="input-description">Masukkan minggu ke berapa yang ingin diprediksi:</p>
+            
+            <form id="predictionForm">
+                <div class="form-group">
+                    <input type="number" 
+                           id="mingguInput" 
+                           name="minggu" 
+                           class="form-input" 
+                           placeholder="Contoh: 130" 
+                           min="1" 
+                           required>
+                </div>
+                <button type="submit" class="btn-predict">
+                    <i class="fas fa-calculator"></i>
+                    Prediksi
+                </button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section">
+            <!-- Statistics Header -->
+            <div class="stats-header">
+                <i class="fas fa-chart-pie"></i>
+                <h3>Statistik Hasil</h3>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div class="stats-summary">
+                <div class="stat-box total">
+                    <div class="label">Total Stok</div>
+                    <div class="value" id="statTotal">-</div>
+                </div>
+                <div class="stat-box tinggi">
+                    <div class="label">Kategori Tinggi</div>
+                    <div class="value" id="statTinggi">-</div>
+                </div>
+                <div class="stat-box rendah">
+                    <div class="label">Kategori Rendah</div>
+                    <div class="value" id="statRendah">-</div>
+                </div>
+                <div class="stat-box rata">
+                    <div class="label">Rata-Rata</div>
+                    <div class="value" id="statRataRata">-</div>
+                </div>
+            </div>
+
+            <!-- Visualization -->
+            <div class="visualization-container">
+                <div class="viz-header">
+                    <i class="fas fa-chart-bar"></i>
+                    <h3>Visualisasi Data</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="predictionChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="table-container">
+                <div class="viz-header">
+                    <i class="fas fa-table"></i>
+                    <h3>Detail Hasil Prediksi</h3>
+                </div>
+                <div class="results-table">
+                    <table class="prediction-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>MOTIF</th>
+                                <th>PREDIKSI</th>
+                                <th>KATEGORI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="loading-spinner"></div>
+            <p style="font-size: 1.1rem; color: #1f2937; font-weight: 600;">Memproses prediksi...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; Tova Gorden</p>
+    </footer>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <script>
+        let predictionChart = null;
+
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const minggu = document.getElementById('mingguInput').value;
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const resultsSection = document.getElementById('resultsSection');
+            
+            loadingOverlay.classList.add('active');
+            resultsSection.classList.remove('active');
+            
+            try {
+                const formData = new FormData();
+                formData.append('minggu', minggu);
+                
+                const response = await fetch('/prediksi', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    alert(data.error || 'Terjadi kesalahan saat prediksi');
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan: ' + error.message);
+            } finally {
+                loadingOverlay.classList.remove('active');
+            }
+        });
+        
+        function displayResults(data) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            const tinggiCount = data.results.filter(r => r.Kategori === 'Tinggi').length;
+            const rendahCount = data.results.filter(r => r.Kategori === 'Rendah').length;
+            const rataRata = data.results.length > 0 ? (data.total_stok / data.results.length).toFixed(2) : 0;
+            
+            document.getElementById('statTotal').textContent = data.total_stok.toLocaleString('id-ID');
+            document.getElementById('statTinggi').textContent = tinggiCount.toLocaleString('id-ID');
+            document.getElementById('statRendah').textContent = rendahCount.toLocaleString('id-ID');
+            document.getElementById('statRataRata').textContent = parseFloat(rataRata).toLocaleString('id-ID', {
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2
+            });
+            
+            resultsBody.innerHTML = '';
+            data.results.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const categoryClass = item.Kategori === 'Tinggi' ? 'category-tinggi' : 'category-rendah';
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${item.Motif}</strong></td>
+                    <td><strong>${item.Prediksi.toLocaleString('id-ID')}</strong></td>
+                    <td>
+                        <span class="category-badge ${categoryClass}">${item.Kategori}</span>
+                    </td>
+                `;
+                resultsBody.appendChild(row);
+            });
+            
+            createChart(data);
+            resultsSection.classList.add('active');
+            
+            setTimeout(() => {
+                resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        }
+        
+        function createChart(data) {
+            const ctx = document.getElementById('predictionChart').getContext('2d');
+            
+            if (predictionChart) {
+                predictionChart.destroy();
+            }
+            
+            const labels = data.results.map(r => r.Motif);
+            const values = data.results.map(r => r.Prediksi);
+            const colors = data.results.map(r => 
+                r.Kategori === 'Tinggi' ? '#3b82f6' : '#ef4444'
+            );
+            
+            predictionChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Prediksi Stok',
+                        data: values,
+                        backgroundColor: colors,
+                        borderColor: colors,
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                },
+                                padding: 15,
+                                generateLabels: function(chart) {
+                                    return [
+                                        {
+                                            text: 'Kategori Tinggi',
+                                            fillStyle: '#3b82f6',
+                                            strokeStyle: '#3b82f6',
+                                            lineWidth: 1,
+                                            hidden: false,
+                                            index: 0
+                                        },
+                                        {
+                                            text: 'Kategori Rendah',
+                                            fillStyle: '#ef4444',
+                                            strokeStyle: '#ef4444',
+                                            lineWidth: 1,
+                                            hidden: false,
+                                            index: 1
+                                        }
+                                    ];
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleFont: {
+                                size: 13,
+                                weight: 'bold'
+                            },
+                            bodyFont: {
+                                size: 12
+                            },
+                            padding: 12,
+                            displayColors: true,
+                            callbacks: {
+                                label: function(context) {
+                                    const item = data.results[context.dataIndex];
+                                    return [
+                                        'Prediksi: ' + item.Prediksi.toLocaleString('id-ID') + ' pcs',
+                                        'Kategori: ' + item.Kategori
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                callback: function(value) {
+                                    return value.toLocaleString('id-ID');
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Jumlah Stok (pcs)',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 9
+                                },
+                                maxRotation: 90,
+                                minRotation: 45
+                            },
+                            title: {
+                                display: true,
+                                text: 'Motif Gorden',
+                                font: {
+                                    size: 13,
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            ctx.canvas.style.height = '450px';
+        }
+    </script>
+</body>
+</html>

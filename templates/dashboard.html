@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tova Gorden - Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <i class="fas fa-file-alt logo-icon"></i>
+            <h1 class="logo-text">Tova Gorden</h1>
+        </div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/upload" class="nav-item">
+                <i class="fas fa-upload"></i>
+                <span>Upload Data</span>
+            </a>
+            <a href="/prediksi" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Prediksi Penjualan</span>
+            </a>
+            <a href="/evaluasi" class="nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Evaluasi Model</span>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-home page-icon"></i>
+                <h2>Dashboard</h2>
+            </div>
+            <p class="page-subtitle">Ringkasan sistem prediksi Jumlah penjualan gorden</p>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <!-- Status Model Card -->
+            <div class="stat-card card-blue">
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="card-label">STATUS MODEL</span>
+                        <i class="fas fa-brain card-icon"></i>
+                    </div>
+                    <div class="card-value">
+                        <span class="badge badge-success">{{ status_model }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Akurasi Model Card -->
+            <div class="stat-card card-cyan">
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="card-label">AKURASI MODEL (R²)</span>
+                        <i class="fas fa-chart-line card-icon"></i>
+                    </div>
+                    <div class="card-value">
+                        {% if akurasi > 0 %}
+                            <span class="percentage">{{ akurasi }}%</span>
+                        {% else %}
+                            <span class="percentage" style="color: #9ca3af;">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Training Card -->
+            <div class="stat-card card-green">
+                <div class="card-content">
+                    <div class="card-header">
+                        <span class="card-label">DATA TRAINING</span>
+                        <i class="fas fa-database card-icon"></i>
+                    </div>
+                    <div class="card-value">
+                        {% if data_training > 0 %}
+                            <span class="records">{{ "{:,}".format(data_training) }} records</span>
+                        {% else %}
+                            <span class="records" style="color: #9ca3af;">-</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <i class="fas fa-chart-area"></i>
+                <h3>Perbandingan Aktual vs Prediksi</h3>
+            </div>
+            <div class="chart-container">
+                {% if plot_data %}
+                    <img src="data:image/png;base64,{{ plot_data }}" alt="Actual vs Predicted Plot" class="chart-image">
+                {% else %}
+                    <div class="no-data">
+                        <i class="fas fa-chart-bar no-data-icon"></i>
+                        <p>Silakan upload data terlebih dahulu untuk melihat grafik</p>
+                        <a href="/upload" class="btn btn-primary" style="margin-top: 1rem; display: inline-block; text-decoration: none;">
+                            <i class="fas fa-upload"></i> Upload Data Sekarang
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; Tova Gorden</p>
+    </footer>
+</body>
+</html>

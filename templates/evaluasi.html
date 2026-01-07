@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluasi Model - Tova Gorden</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .metrics-table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 2rem;
+            border: 1px solid #e5e7eb;
+        }
+
+        .metrics-table-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .metrics-table-header i {
+            font-size: 1.5rem;
+            color: #3b82f6;
+        }
+
+        .metrics-table-header h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .evaluation-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+        }
+
+        .evaluation-table thead {
+            background: #f9fafb;
+        }
+
+        .evaluation-table thead th {
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+
+        .evaluation-table thead th:first-child {
+            text-align: left;
+            padding-left: 1.5rem;
+        }
+
+        .evaluation-table tbody tr {
+            transition: all 0.2s ease;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .evaluation-table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .evaluation-table tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .evaluation-table tbody td {
+            padding: 1.5rem 1rem;
+            color: #1f2937;
+            font-size: 1rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .evaluation-table tbody td:first-child {
+            text-align: left;
+            padding-left: 1.5rem;
+        }
+
+        .dataset-label {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .dataset-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        .icon-training {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .icon-validation {
+            background: #fbbf24;
+            color: white;
+        }
+
+        .icon-testing {
+            background: #10b981;
+            color: white;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: #374151;
+        }
+
+        .r2-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: white;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .r2-training {
+            background: #3b82f6;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .r2-validation {
+            background: #fbbf24;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.3);
+        }
+
+        .r2-testing {
+            background: #10b981;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+        }
+
+        .error-container {
+            background: white;
+            border-radius: 12px;
+            padding: 3rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            color: #ef4444;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.1rem;
+            color: #6b7280;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <i class="fas fa-file-alt logo-icon"></i>
+            <h1 class="logo-text">Tova Gorden</h1>
+        </div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/upload" class="nav-item">
+                <i class="fas fa-upload"></i>
+                <span>Upload Data</span>
+            </a>
+            <a href="/prediksi" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Prediksi Penjualan</span>
+            </a>
+            <a href="/evaluasi" class="nav-item active">
+                <i class="fas fa-tasks"></i>
+                <span>Evaluasi Model</span>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-tasks page-icon"></i>
+                <h2>Evaluasi Model</h2>
+            </div>
+            <p class="page-subtitle">Metrik evaluasi detail per dataset untuk model Random Forest</p>
+        </div>
+
+        {% if error %}
+        <!-- Error State -->
+        <div class="error-container">
+            <i class="fas fa-exclamation-triangle error-icon"></i>
+            <p class="error-message">{{ error }}</p>
+            <a href="/upload" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Upload Data Sekarang
+            </a>
+        </div>
+        {% else %}
+        <!-- Metrics Table -->
+        <div class="metrics-table-container">
+            <div class="metrics-table-header">
+                <i class="fas fa-table"></i>
+                <h3>Metrik Evaluasi Detail per Dataset</h3>
+            </div>
+            
+            <table class="evaluation-table">
+                <thead>
+                    <tr>
+                        <th style="text-align: left;"><i class="fas fa-database"></i> DATASET</th>
+                        <th>RMSE</th>
+                        <th>MAE</th>
+                        <th>MAPE</th>
+                        <th>R² SCORE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Training Set -->
+                    <tr>
+                        <td>
+                            <div class="dataset-label">
+                                <div class="dataset-icon icon-training">
+                                    <i class="fas fa-graduation-cap"></i>
+                                </div>
+                                Training Set (70%)
+                            </div>
+                        </td>
+                        <td><span class="metric-value">{{ metrics.train_rmse }}</span></td>
+                        <td><span class="metric-value">{{ metrics.train_mae }}</span></td>
+                        <td><span class="metric-value">{{ metrics.train_mape }}%</span></td>
+                        <td>
+                            <span class="r2-badge r2-training">{{ metrics.train_r2_persen }}%</span>
+                        </td>
+                    </tr>
+
+                    <!-- Validation Set -->
+                    <tr>
+                        <td>
+                            <div class="dataset-label">
+                                <div class="dataset-icon icon-validation">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                                Validation Set (15%)
+                            </div>
+                        </td>
+                        <td><span class="metric-value">{{ metrics.val_rmse }}</span></td>
+                        <td><span class="metric-value">{{ metrics.val_mae }}</span></td>
+                        <td><span class="metric-value">{{ metrics.val_mape }}%</span></td>
+                        <td>
+                            <span class="r2-badge r2-validation">{{ metrics.val_r2_persen }}%</span>
+                        </td>
+                    </tr>
+
+                    <!-- Testing Set -->
+                    <tr>
+                        <td>
+                            <div class="dataset-label">
+                                <div class="dataset-icon icon-testing">
+                                    <i class="fas fa-star"></i>
+                                </div>
+                                Testing Set (15%)
+                            </div>
+                        </td>
+                        <td><span class="metric-value">{{ metrics.test_rmse }}</span></td>
+                        <td><span class="metric-value">{{ metrics.test_mae }}</span></td>
+                        <td><span class="metric-value">{{ metrics.test_mape }}%</span></td>
+                        <td>
+                            <span class="r2-badge r2-testing">{{ metrics.test_r2_persen }}%</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Feature Importance Chart -->
+        <div class="chart-section">
+            <div class="chart-header">
+                <i class="fas fa-star"></i>
+                <h3>Feature Importance (Fitur Paling Berpengaruh)</h3>
+            </div>
+            <div class="chart-container">
+                {% if plot_data %}
+                    <img src="data:image/png;base64,{{ plot_data }}" alt="Feature Importance Plot" class="chart-image">
+                {% else %}
+                    <div class="no-data">
+                        <i class="fas fa-chart-bar no-data-icon"></i>
+                        <p>Grafik tidak tersedia</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; Tova Gorden</p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Data - Tova Gorden</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <i class="fas fa-file-alt logo-icon"></i>
+            <h1 class="logo-text">Tova Gorden</h1>
+        </div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="/upload" class="nav-item active">
+                <i class="fas fa-upload"></i>
+                <span>Upload Data</span>
+            </a>
+            <a href="/prediksi" class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                <span>Prediksi Penjualan</span>
+            </a>
+            <a href="/evaluasi" class="nav-item">
+                <i class="fas fa-tasks"></i>
+                <span>Evaluasi Model</span>
+            </a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Page Title -->
+        <div class="page-header">
+            <div class="page-title">
+                <i class="fas fa-upload page-icon"></i>
+                <h2>Upload Data</h2>
+            </div>
+            <p class="page-subtitle">Upload file Excel untuk training dan prediksi</p>
+        </div>
+
+        <!-- Alert Messages -->
+        <div id="alert-container"></div>
+
+        <!-- Upload Form -->
+        <div class="upload-container">
+            <h3 class="upload-title">
+                <i class="fas fa-file-excel"></i>
+                Upload File Excel
+            </h3>
+
+            <form id="uploadForm" enctype="multipart/form-data">
+                <!-- Dropzone -->
+                <div class="dropzone" id="dropzone">
+                    <i class="fas fa-cloud-upload-alt dropzone-icon"></i>
+                    <p class="dropzone-text">Klik atau drag file ke sini</p>
+                    <p class="dropzone-format">Format: .xlsx atau .xls (Max 16MB)</p>
+                    <input type="file" id="fileInput" name="file" accept=".xlsx,.xls" style="display: none;">
+                </div>
+
+                <!-- File Info Display -->
+                <div id="fileInfo" style="display: none;" class="file-info">
+                    <i class="fas fa-file-excel"></i>
+                    <span id="fileName"></span>
+                    <button type="button" id="removeFile" class="btn-remove">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Upload Button -->
+                <button type="submit" id="uploadBtn" class="btn btn-primary btn-upload" disabled>
+                    <i class="fas fa-upload"></i>
+                    <span>Upload Data</span>
+                    <div class="loading" id="loadingSpinner" style="display: none;"></div>
+                </button>
+            </form>
+
+            <!-- Format Info -->
+            <div class="format-info">
+                <div class="format-header">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Format Data yang Diperlukan:</strong>
+                </div>
+                <ul class="format-list">
+                    <li>File Excel (.xlsx atau .xls)</li>
+                    <li>Kolom: <code>Motif</code> (atau <code>Nama Motif</code> / <code>Kode Motif</code>)</li>
+                    <li>Kolom: <code>Minggu 1</code>, <code>Minggu 2</code>, ..., <code>Minggu N</code></li>
+                    <li>Data penjualan dalam format angka</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; Tova Gorden</p>
+    </footer>
+
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const removeFile = document.getElementById('removeFile');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        const alertContainer = document.getElementById('alert-container');
+
+        // Click to select file
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+                handleFileSelect();
+            }
+        });
+
+        // File input change
+        fileInput.addEventListener('change', handleFileSelect);
+
+        function handleFileSelect() {
+            const file = fileInput.files[0];
+            if (file) {
+                fileName.textContent = file.name;
+                fileInfo.style.display = 'flex';
+                dropzone.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        // Remove file
+        removeFile.addEventListener('click', () => {
+            fileInput.value = '';
+            fileInfo.style.display = 'none';
+            dropzone.style.display = 'block';
+            uploadBtn.disabled = true;
+        });
+
+        // Upload form submit
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(uploadForm);
+            
+            uploadBtn.disabled = true;
+            loadingSpinner.style.display = 'inline-block';
+            uploadBtn.querySelector('span').textContent = 'Mengupload...';
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('success', result.message);
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    showAlert('error', result.error);
+                    uploadBtn.disabled = false;
+                }
+            } catch (error) {
+                showAlert('error', 'Terjadi kesalahan saat mengupload file');
+                uploadBtn.disabled = false;
+            } finally {
+                loadingSpinner.style.display = 'none';
+                uploadBtn.querySelector('span').textContent = 'Upload Data';
+            }
+        });
+
+        function showAlert(type, message) {
+            const alertClass = type === 'success' ? 'alert-success' : 'alert-error';
+            const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+            
+            const alert = document.createElement('div');
+            alert.className = `alert ${alertClass}`;
+            alert.innerHTML = `
+                <i class="fas ${iconClass}"></i>
+                <span>${message}</span>
+            `;
+            
+            alertContainer.innerHTML = '';
+            alertContainer.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
